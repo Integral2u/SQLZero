@@ -4,6 +4,9 @@ A self-contained, zero-dependency, in-memory SQL engine written in pure C#.
 Drop a single file into any project and write SQL against strongly-typed in-memory tables — no Entity Framework, no SQLite, no server required.  
 Extend it with your own callable functions via the add-in system, and query asynchronously with full cancellation support.
 
+[![NuGet](https://img.shields.io/nuget/v/SQLZero.svg)](https://www.nuget.org/packages/SQLZero)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/SQLZero.svg)](https://www.nuget.org/packages/SQLZero)
+
 ---
 
 ## Features
