@@ -1,11 +1,33 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-  <PropertyGroup>
-    <TargetFramework>net9.0</TargetFramework>
-    <ImplicitUsings>enable</ImplicitUsings>
-    <Nullable>enable</Nullable>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <Title>SQLZero</Title>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+		<Title>SQLZero</Title>
+		<Company>Integral2U</Company>
+		<Description>A self-contained, zero-dependency, in-memory SQL engine written in pure C#.  </Description>
+		<PackageProjectUrl>https://github.com/Integral2u/SQLZero</PackageProjectUrl>
+		<PackageIcon>badgeSQL.png</PackageIcon>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<RepositoryUrl>https://github.com/Integral2u/SQLZero</RepositoryUrl>
+		<RepositoryType>git</RepositoryType>
+		<PackageTags>sql;in-memory;database;embedded-database;sqlite-alternative;zero-dependency</PackageTags>
+	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="..\..\..\..\Logo\badgeSQL.png">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
+
+	<ItemGroup>
+		<None Update="README.md">
+			<Pack>True</Pack>
+			<PackagePath>\</PackagePath>
+		</None>
+	</ItemGroup>
 
 </Project>
