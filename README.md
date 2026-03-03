@@ -31,19 +31,6 @@ Extend it with your own callable functions via the add-in system, and query asyn
 
 ---
 
-## Installation
-
-Copy **`SQLDatabase.cs`** into your project.  The file has no external dependencies beyond the .NET BCL.
-
-Targets **C# 12 / .NET 8** or later (uses nullable reference types, primary constructors, and collection expressions).
-
-Add the namespace:
-```csharp
-using SQLZero;
-```
-
----
-
 ## Quick Start
 
 ```csharp
