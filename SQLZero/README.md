@@ -29,8 +29,6 @@ Extend it with your own callable functions via the add-in system, and query asyn
 | **Persistence** | JSON serialization/deserialization for tables, triggers, and the full database |
 | **Comments** | `-- single line` and `/* multi-line */` |
 
----
-
 
 ---
 
