@@ -1,4 +1,4 @@
-# SQLite.Zero — In-Memory SQL Engine for C#
+# SQLZero — In-Memory SQL Engine for C#
 
 A self-contained, zero-dependency, in-memory SQL engine written in pure C#.  
 Drop into any project and write SQL against strongly-typed in-memory tables — no Entity Framework, no SQLite, no server required.  
