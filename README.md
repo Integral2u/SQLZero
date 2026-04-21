@@ -6,7 +6,12 @@ Extend it with your own callable functions via the add-in system, and query asyn
 
 [![NuGet](https://img.shields.io/nuget/v/SQLZero.svg)](https://www.nuget.org/packages/SQLZero)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/SQLZero.svg)](https://www.nuget.org/packages/SQLZero)
-
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Last commit](https://img.shields.io/github/last-commit/Integral2u/SQLZero)](https://github.com/Integral2u/SQLZero/commits/main)
+[![Latest release](https://img.shields.io/github/v/release/Integral2u/SQLZero?style=flat)](https://github.com/Integral2u/SQLZero/releases/latest)
+[![NuGet](https://img.shields.io/nuget/v/SQLZero.svg)](https://www.nuget.org/packages/SQLZero)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/SQLZero.svg)](https://www.nuget.org/packages/SQLZero)
+![GitHub Sponsor](https://img.shields.io/github/sponsors/Integral2u?label=Sponsor&logo=GitHub)
 ---
 
 ## Features
