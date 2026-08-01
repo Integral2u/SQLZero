@@ -6,7 +6,12 @@ Extend it with your own callable functions via the add-in system, and query asyn
 
 [![NuGet](https://img.shields.io/nuget/v/SQLZero.svg)](https://www.nuget.org/packages/SQLZero)
 [![NuGet Downloads](https://img.shields.io/nuget/dt/SQLZero.svg)](https://www.nuget.org/packages/SQLZero)
-
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Last commit](https://img.shields.io/github/last-commit/Integral2u/SQLZero)](https://github.com/Integral2u/SQLZero/commits/main)
+[![Latest release](https://img.shields.io/github/v/release/Integral2u/SQLZero?style=flat)](https://github.com/Integral2u/SQLZero/releases/latest)
+[![NuGet](https://img.shields.io/nuget/v/SQLZero.svg)](https://www.nuget.org/packages/SQLZero)
+[![NuGet Downloads](https://img.shields.io/nuget/dt/SQLZero.svg)](https://www.nuget.org/packages/SQLZero)
+![GitHub Sponsor](https://img.shields.io/github/sponsors/Integral2u?label=Sponsor&logo=GitHub)
 ---
 
 ## Features
@@ -14,9 +19,8 @@ Extend it with your own callable functions via the add-in system, and query asyn
 | Area | Supported |
 |---|---|
 | **DML** | `INSERT`, `UPDATE`, `DELETE` |
-| **DDL** | `CREATE TABLE`, `ALTER TABLE`, `DROP TABLE`, `CREATE FUNCTION`, `DROP FUNCTION`, `CREATE TRIGGER`, `DROP TRIGGER`, **`GET SCHEMA`** |
-| **SELECT** | `DISTINCT`, `TOP n`, `*`, `table.*`, column aliases, arbitrary expressions, **CTEs (`WITH`)** |
-| **Quoting** | Identifiers (tables/columns) supported via `[ ]`, `` ` ` ``, and `""` |
+| **DDL** | `CREATE TABLE`, `ALTER TABLE`, `DROP TABLE`, `CREATE FUNCTION`, `DROP FUNCTION`, `CREATE TRIGGER`, `DROP TRIGGER` |
+| **SELECT** | `DISTINCT`, `TOP n`, `*`, `table.*`, column aliases, arbitrary expressions |
 | **Joins** | `INNER`, `LEFT`, `RIGHT`, `FULL OUTER`, `CROSS JOIN`, implicit cross-join |
 | **Filtering** | `WHERE`, `HAVING`, `AND/OR/NOT`, `IS [NOT] NULL`, `BETWEEN`, `IN`, `NOT IN`, `LIKE` (`%` `_`) |
 | **Aggregates** | `COUNT`, `SUM`, `AVG`, `MIN`, `MAX` + `GROUP BY` + `HAVING` + `DISTINCT` |
@@ -29,7 +33,6 @@ Extend it with your own callable functions via the add-in system, and query asyn
 | **Async** | `ExecuteNonQueryAsync`, `ExecuteReaderAsync`, `ExecuteScalarAsync` — cancellable |
 | **Persistence** | JSON serialization/deserialization for tables, triggers, and the full database |
 | **Comments** | `-- single line` and `/* multi-line */` |
-
 
 ---
 
@@ -179,23 +182,10 @@ int      Count   { get; }
 void     AddColumn(string name, Type type);  // existing rows filled with type default
 void     AddRow(object?[] row);              // type-checked; coercion attempted
 object?  GetValue(int rowIndex, string columnName);
-string   GetSchema();                        // Returns CREATE TABLE definition
 
 // JSON round-trip
 string           ToJson(bool indented = true);
 static SQLTable  FromJson(string json);
-```
-
----
-
-### `SQLDatabase` (new schema methods)
-
-```csharp
-// Returns full database schema, optionally prefixed with CREATE SCHEMA
-string GetSchema(string? schemaName = null);
-
-// Returns all tables
-IReadOnlyCollection<SQLTable> GetTables();
 ```
 
 ---
@@ -521,7 +511,7 @@ SQLTable
 
 ## Running the Tests
 
-Tests use **NUnit 3.x**. Add the NuGet packages `NUnit` and `NUnit3TestAdapter` to a test project, and run:
+Tests use **NUnit 3.x**. Add the NuGet packages `NUnit` and `NUnit3TestAdapter` to a test project, include and run:
 
 ```bash
 dotnet test
