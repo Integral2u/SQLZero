@@ -314,6 +314,16 @@ var result = db.ExecuteReader(@"
     ORDER  BY LineTotal DESC");
 ```
 
+### Common Table Expressions (WITH)
+
+```csharp
+var result = db.ExecuteReader(@"
+    WITH EngDepts AS (SELECT * FROM Departments WHERE Name = 'Engineering')
+    SELECT E.Name, D.Name AS DeptName
+    FROM Employees E
+    JOIN EngDepts D ON E.DeptId = D.Id");
+```
+
 ### CREATE FUNCTION
 
 ```csharp
