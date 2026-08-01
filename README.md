@@ -20,7 +20,7 @@ Extend it with your own callable functions via the add-in system, and query asyn
 | Area | Supported |
 |---|---|
 | **DML** | `INSERT`, `UPDATE`, `DELETE` |
-| **DDL** | `CREATE TABLE`, `ALTER TABLE`, `DROP TABLE`, `CREATE FUNCTION`, `DROP FUNCTION`, `CREATE TRIGGER`, `DROP TRIGGER`, **`GET SCHEMA`** |
+| **DDL** | `CREATE TABLE`, `ALTER TABLE`, `DROP TABLE`, `CREATE FUNCTION`, `DROP FUNCTION`, `CREATE TRIGGER`, `DROP TRIGGER`,`WITH`, **`GET SCHEMA`** |
 | **SELECT** | `DISTINCT`, `TOP n`, `*`, `table.*`, column aliases, arbitrary expressions, **CTEs (`WITH`)** |
 | **Quoting** | Identifiers (tables/columns) supported via `[ ]`, `` ` ` ``, and `""` |
 | **Joins** | `INNER`, `LEFT`, `RIGHT`, `FULL OUTER`, `CROSS JOIN`, implicit cross-join |
