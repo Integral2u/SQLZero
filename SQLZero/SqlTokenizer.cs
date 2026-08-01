@@ -18,7 +18,8 @@ namespace SQLZero
         "INT","INTEGER","BIGINT","SMALLINT","TINYINT","FLOAT","DOUBLE","REAL",
         "DECIMAL","NUMERIC","MONEY","VARCHAR","NVARCHAR","CHAR","TEXT","NTEXT","STRING",
         "BIT","BOOL","BOOLEAN","DATETIME","DATE","TIME","DATETIME2","UNIQUEIDENTIFIER",
-        "TRUE","FALSE","CAST","CONVERT","UNION","INTERSECT","EXCEPT","IDENTITY","AUTO_INCREMENT"
+        "TRUE","FALSE","CAST","CONVERT","UNION","INTERSECT","EXCEPT","IDENTITY","AUTO_INCREMENT",
+        "WITH"
     };
 
         public static List<SqlToken> Tokenize(string? sql)
@@ -44,8 +45,8 @@ namespace SQLZero
                     i += 2; continue;
                 }
 
-                // String literal ' or "
-                if (sql[i] == '\'' || sql[i] == '"')
+                // String literal '
+                if (sql[i] == '\'')
                 {
                     char q = sql[i++];
                     var sb = new StringBuilder();
@@ -59,10 +60,12 @@ namespace SQLZero
                     continue;
                 }
 
-                // Quoted identifier [name] or `name`
-                if (sql[i] == '[' || sql[i] == '`')
+                // Quoted identifier [name], `name`, or "name"
+                if (sql[i] == '[' || sql[i] == '`' || sql[i] == '"')
                 {
-                    char close = sql[i] == '[' ? ']' : '`'; i++;
+                    char open = sql[i];
+                    char close = open == '[' ? ']' : (open == '`' ? '`' : '"');
+                    i++;
                     var sb = new StringBuilder();
                     while (i < sql.Length && sql[i] != close) sb.Append(sql[i++]);
                     if (i < sql.Length) i++;

@@ -14,8 +14,9 @@ Extend it with your own callable functions via the add-in system, and query asyn
 | Area | Supported |
 |---|---|
 | **DML** | `INSERT`, `UPDATE`, `DELETE` |
-| **DDL** | `CREATE TABLE`, `ALTER TABLE`, `DROP TABLE`, `CREATE FUNCTION`, `DROP FUNCTION`, `CREATE TRIGGER`, `DROP TRIGGER` |
-| **SELECT** | `DISTINCT`, `TOP n`, `*`, `table.*`, column aliases, arbitrary expressions |
+| **DDL** | `CREATE TABLE`, `ALTER TABLE`, `DROP TABLE`, `CREATE FUNCTION`, `DROP FUNCTION`, `CREATE TRIGGER`, `DROP TRIGGER`, **`GET SCHEMA`** |
+| **SELECT** | `DISTINCT`, `TOP n`, `*`, `table.*`, column aliases, arbitrary expressions, **CTEs (`WITH`)** |
+| **Quoting** | Identifiers (tables/columns) supported via `[ ]`, `` ` ` ``, and `""` |
 | **Joins** | `INNER`, `LEFT`, `RIGHT`, `FULL OUTER`, `CROSS JOIN`, implicit cross-join |
 | **Filtering** | `WHERE`, `HAVING`, `AND/OR/NOT`, `IS [NOT] NULL`, `BETWEEN`, `IN`, `NOT IN`, `LIKE` (`%` `_`) |
 | **Aggregates** | `COUNT`, `SUM`, `AVG`, `MIN`, `MAX` + `GROUP BY` + `HAVING` + `DISTINCT` |
@@ -190,10 +191,23 @@ int      Count   { get; }
 void     AddColumn(string name, Type type);  // existing rows filled with type default
 void     AddRow(object?[] row);              // type-checked; coercion attempted
 object?  GetValue(int rowIndex, string columnName);
+string   GetSchema();                        // Returns CREATE TABLE definition
 
 // JSON round-trip
 string           ToJson(bool indented = true);
 static SQLTable  FromJson(string json);
+```
+
+---
+
+### `SQLDatabase` (new schema methods)
+
+```csharp
+// Returns full database schema, optionally prefixed with CREATE SCHEMA
+string GetSchema(string? schemaName = null);
+
+// Returns all tables
+IReadOnlyCollection<SQLTable> GetTables();
 ```
 
 ---

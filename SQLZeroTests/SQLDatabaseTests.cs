@@ -11,8 +11,97 @@ namespace SQLZeroTests
     public class SQLDatabaseTests
     {
         // ──────────────────────────────────────────────────────────────────────────
-        //  Helpers
+        //  Common Table Expressions (WITH)
         // ──────────────────────────────────────────────────────────────────────────
+
+        [Test]
+        public void WithClause_SimpleCte_JoinsCorrectly()
+        {
+            var db = new SQLZero.SQLDatabase();
+            db.ExecuteNonQuery("CREATE TABLE Employees (Id INT, Name VARCHAR(50), DeptId INT)");
+            db.ExecuteNonQuery("INSERT INTO Employees VALUES (1, 'Alice', 10), (2, 'Bob', 20), (3, 'Charlie', 10)");
+            db.ExecuteNonQuery("CREATE TABLE Departments (Id INT, Name VARCHAR(50))");
+            db.ExecuteNonQuery("INSERT INTO Departments VALUES (10, 'Engineering'), (20, 'Sales')");
+
+            var r = db.ExecuteReader(@"
+            WITH EngDepts AS (SELECT * FROM Departments WHERE Name = 'Engineering')
+            SELECT E.Name, D.Name AS DeptName
+            FROM Employees E
+            JOIN EngDepts D ON E.DeptId = D.Id");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(DataRows(r), Is.EqualTo(2)); // Alice and Charlie
+                Assert.That(Cell(r, 1, 1), Is.EqualTo("Engineering"));
+                Assert.That(Cell(r, 2, 1), Is.EqualTo("Engineering"));
+            });
+        }
+
+        [Test]
+        public void WithClause_MultipleCtes_BothAccessible()
+        {
+            var db = new SQLZero.SQLDatabase();
+            db.ExecuteNonQuery("CREATE TABLE T1 (Val INT)");
+            db.ExecuteNonQuery("INSERT INTO T1 VALUES (10)");
+            db.ExecuteNonQuery("CREATE TABLE T2 (Val INT)");
+            db.ExecuteNonQuery("INSERT INTO T2 VALUES (20)");
+
+            var r = db.ExecuteReader(@"
+            WITH C1 AS (SELECT Val * 2 AS V FROM T1),
+                 C2 AS (SELECT Val * 3 AS V FROM T2)
+            SELECT C1.V + C2.V AS Total FROM C1, C2");
+
+            Assert.That(SqlExpr.ToNum(Cell(r, 1, 0)), Is.EqualTo(80)); // (10*2) + (20*3) = 20 + 60 = 80
+        }
+
+        [Test]
+        public void TableNames_WithSpaces_SupportedViaQuotes()
+        {
+            var db = new SQLZero.SQLDatabase();
+            
+            // Testing Square Brackets
+            db.ExecuteNonQuery("CREATE TABLE [My Table] (Id INT)");
+            db.ExecuteNonQuery("INSERT INTO [My Table] VALUES (1)");
+            
+            // Testing Backticks
+            db.ExecuteNonQuery("CREATE TABLE `Another Table` (Id INT)");
+            db.ExecuteNonQuery("INSERT INTO `Another Table` VALUES (2)");
+
+            // Testing Double Quotes
+            db.ExecuteNonQuery("CREATE TABLE \"Final Table\" (Id INT)");
+            db.ExecuteNonQuery("INSERT INTO \"Final Table\" VALUES (3)");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(SqlExpr.ToNum(db.ExecuteScalar("SELECT Id FROM [My Table]")), Is.EqualTo(1));
+                Assert.That(SqlExpr.ToNum(db.ExecuteScalar("SELECT Id FROM `Another Table`")), Is.EqualTo(2));
+                Assert.That(SqlExpr.ToNum(db.ExecuteScalar("SELECT Id FROM \"Final Table\"")), Is.EqualTo(3));
+            });
+        }
+
+        [Test]
+        public void GetSchema_TableAndDatabase_ReturnsCorrectSql()
+        {
+            var db = new SQLZero.SQLDatabase();
+            db.ExecuteNonQuery("CREATE TABLE Users (FullName VARCHAR(100), Email VARCHAR(255))");
+            db.ExecuteNonQuery("CREATE TABLE Orders (Id INT, UserId INT)");
+
+            string dbSchema = db.GetSchema("sales");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(dbSchema, Does.Contain("CREATE SCHEMA sales;"));
+                Assert.That(dbSchema, Does.Contain("CREATE TABLE Users"));
+                Assert.That(dbSchema, Does.Contain("FullName TEXT"));
+                Assert.That(dbSchema, Does.Contain("Email TEXT"));
+                Assert.That(dbSchema, Does.Contain("CREATE TABLE Orders"));
+                // Note: The engine currently maps all integer types to BIGINT internally
+                Assert.That(dbSchema, Does.Contain("Id BIGINT"));
+                Assert.That(dbSchema, Does.Contain("UserId BIGINT"));
+            });
+        }
+
+
 
         /// <summary>Returns the value at (row, col) from a reader result (1-based for data rows).</summary>
         private static object? Cell(object?[,] grid, int dataRow, int col) => grid[dataRow, col];

@@ -328,5 +328,23 @@ namespace SQLZero
                 }
             }
         }
+
+        public string GetSchema(string? schemaName = null)
+        {
+            var sb = new StringBuilder();
+            if (!string.IsNullOrEmpty(schemaName))
+            {
+                sb.AppendLine($"CREATE SCHEMA {schemaName};");
+                sb.AppendLine();
+            }
+            foreach (var table in Tables.Values)
+            {
+                sb.AppendLine(table.GetSchema());
+                sb.AppendLine();
+            }
+            return sb.ToString().TrimEnd();
+        }
+
+        public IReadOnlyCollection<SQLTable> GetTables() => Tables.Values;
     }
 }

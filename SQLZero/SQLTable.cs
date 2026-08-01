@@ -310,5 +310,25 @@ namespace SQLZero
             "Guid" => typeof(Guid),
             _ => typeof(string)
         };
+
+        internal static string ClrTypeToSql(Type type)
+        {
+            if (type == typeof(long)) return "BIGINT";
+            if (type == typeof(double)) return "DOUBLE";
+            if (type == typeof(bool)) return "BIT";
+            if (type == typeof(DateTime)) return "DATETIME";
+            if (type == typeof(Guid)) return "UNIQUEIDENTIFIER";
+            return "TEXT";
+        }
+
+        public string GetSchema()
+        {
+            var sb = new StringBuilder();
+            sb.AppendLine($"CREATE TABLE {Name} (");
+            var colDefs = Columns.Select(c => $"    {c} {ClrTypeToSql(GetColumnType(c))}");
+            sb.AppendLine(string.Join(",\n", colDefs));
+            sb.Append(");");
+            return sb.ToString();
+        }
     }
 }

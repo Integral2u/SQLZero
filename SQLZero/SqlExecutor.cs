@@ -5,6 +5,13 @@ namespace SQLZero
     //  SQL EXECUTOR  (parser + evaluation engine)
     // ============================================================
 
+    internal class CommonTableExpression
+    {
+        public string Name = string.Empty;
+        public List<string> Columns = new();
+        public List<SqlToken> SelectTokens = new();
+    }
+
     internal class SqlExecutor(List<SqlToken> tokens, Dictionary<string, SQLTable> tables,
                        Dictionary<string, SqlFunction> functions,
                        Dictionary<string, SqlTrigger> triggers,
@@ -15,6 +22,7 @@ namespace SQLZero
         private readonly Dictionary<string, SQLTable> _tables = tables;
         private readonly Dictionary<string, SqlFunction> _functions = functions;
         private readonly Dictionary<string, SqlTrigger> _triggers = triggers;
+        private readonly Dictionary<string, CommonTableExpression> _ctes = new(StringComparer.OrdinalIgnoreCase);
         private readonly IReadOnlyDictionary<string, ISqlAddIn>? _addIns = addIns;
 
         private SqlToken Cur => _p < _t.Count ? _t[_p] : new SqlToken(SqlTokenType.EOF, "");
@@ -47,6 +55,9 @@ namespace SQLZero
 
         public object?[,] RunReader()
         {
+            if (Cur.Value.Equals("WITH", StringComparison.OrdinalIgnoreCase))
+                ParseWithClause();
+
             if (!Cur.Value.Equals("SELECT", StringComparison.OrdinalIgnoreCase))
                 throw new InvalidOperationException($"Expected SELECT, got '{Cur.Value}'.");
             return DoSelect();
@@ -810,6 +821,58 @@ namespace SQLZero
                                          c.Having, c.OrderBy, c.Distinct, c.Limit, c.Offset, ct);
         }
 
+        private void ParseWithClause()
+        {
+            Expect("WITH");
+
+            do
+            {
+                string cteName = Consume().Value;
+                var cte = new CommonTableExpression { Name = cteName };
+
+                // Optional column list: cte_name (col1, col2, ...)
+                if (Cur.Value == "(")
+                {
+                    _p++;
+                    // Check if this is a column list or the SELECT
+                    if (Cur.Type == SqlTokenType.Identifier && Peek().Value != "SELECT")
+                    {
+                        // Column list
+                        while (Cur.Value != ")")
+                        {
+                            cte.Columns.Add(Consume().Value);
+                            Match(",");
+                        }
+                        _p++; // consume )
+                    }
+                    else
+                    {
+                        // No column list, rewind
+                        _p--;
+                    }
+                }
+
+                Expect("AS");
+                Expect("(");
+
+                // Read SELECT tokens until matching )
+                var selectTokens = new List<SqlToken>();
+                int depth = 1;
+                while (_p < _t.Count && depth > 0)
+                {
+                    if (_t[_p].Value == "(") depth++;
+                    else if (_t[_p].Value == ")") { depth--; if (depth == 0) break; }
+                    selectTokens.Add(_t[_p++]);
+                }
+                Expect(")");
+
+                selectTokens.Add(new SqlToken(SqlTokenType.EOF, ""));
+                cte.SelectTokens = selectTokens;
+                _ctes[cteName] = cte;
+
+            } while (Match(","));
+        }
+
         private object?[,] ExecSelect(
             List<SelectItem> sel,
             List<(string Name, string Alias)> froms,
@@ -820,6 +883,41 @@ namespace SQLZero
             List<(List<SqlToken> Expr, bool Asc)>? orderBy,
             bool distinct, int? limit, int? offset)
         {
+            // ── Materialize CTEs ──────────────────────────────────────────────
+            foreach (var cte in _ctes.Values)
+            {
+                // Execute the CTE's SELECT query
+                var cteExecutor = new SqlExecutor(cte.SelectTokens, _tables, _functions, _triggers, _addIns);
+                object?[,] cteResult = cteExecutor.RunReader();
+
+                // Create a temporary table from the result
+                int cols = cteResult.GetLength(1);
+
+                string[] columnNames;
+                if (cte.Columns.Count > 0)
+                    columnNames = cte.Columns.ToArray();
+                else
+                {
+                    columnNames = new string[cols];
+                    for (int i = 0; i < cols; i++)
+                        columnNames[i] = cteResult[0, i]?.ToString() ?? $"col{i}";
+                }
+
+                var tempTable = new SQLTable(cte.Name, columnNames);
+
+                // Populate the temp table
+                for (int r = 1; r < cteResult.GetLength(0); r++)
+                {
+                    var row = new object?[cols];
+                    for (int c = 0; c < cols; c++)
+                        row[c] = cteResult[r, c];
+                    tempTable.AddRow(row);
+                }
+
+                // Add to tables for this query execution
+                _tables[cte.Name] = tempTable;
+            }
+
             // ── Build row set ─────────────────────────────────────────────
             List<Dictionary<string, object?>> rows;
 
@@ -884,6 +982,41 @@ namespace SQLZero
             bool distinct, int? limit, int? offset,
             CancellationToken ct)
         {
+            // ── Materialize CTEs ──────────────────────────────────────────────
+            foreach (var cte in _ctes.Values)
+            {
+                // Execute the CTE's SELECT query
+                var cteExecutor = new SqlExecutor(cte.SelectTokens, _tables, _functions, _triggers, _addIns);
+                object?[,] cteResult = cteExecutor.RunReader();
+
+                // Create a temporary table from the result
+                int cols = cteResult.GetLength(1);
+
+                string[] columnNames;
+                if (cte.Columns.Count > 0)
+                    columnNames = cte.Columns.ToArray();
+                else
+                {
+                    columnNames = new string[cols];
+                    for (int i = 0; i < cols; i++)
+                        columnNames[i] = cteResult[0, i]?.ToString() ?? $"col{i}";
+                }
+
+                var tempTable = new SQLTable(cte.Name, columnNames);
+
+                // Populate the temp table
+                for (int r = 1; r < cteResult.GetLength(0); r++)
+                {
+                    var row = new object?[cols];
+                    for (int c = 0; c < cols; c++)
+                        row[c] = cteResult[r, c];
+                    tempTable.AddRow(row);
+                }
+
+                // Add to tables for this query execution
+                _tables[cte.Name] = tempTable;
+            }
+
             // ── Build row set (identical to ExecSelect) ───────────────────
             List<Dictionary<string, object?>> rows;
 
