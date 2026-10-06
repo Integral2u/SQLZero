@@ -216,20 +216,21 @@ namespace SQLZero
                         else
                         {
                             // Scan inner tokens (respecting parens) without moving p
-                            var innerParts = new List<string>();
+                            var innerParts = new List<SqlToken>();
                             bool seenDistinct = false;
                             int depth = 0, scan = p;
                             while (scan < t.Count)
                             {
-                                string sv = t[scan].Value;
-                                if (sv == "(") depth++;
-                                else if (sv == ")") { if (depth == 0) break; depth--; }
-                                else if (sv == "," && depth == 0) { innerParts.Add(","); scan++; continue; }
-                                else if (sv.Equals("DISTINCT", StringComparison.OrdinalIgnoreCase)) { seenDistinct = true; }
-                                else innerParts.Add(sv);
+                                var st = t[scan];
+                                if (st.Value == ")" && depth == 0) break;
+                                if (st.Value == "(") depth++;
+                                else if (st.Value == ")") depth--;
+                                if (st.Type == SqlTokenType.Keyword && st.Value.Equals("DISTINCT", StringComparison.OrdinalIgnoreCase)) seenDistinct = true;
+                                else innerParts.Add(st);
                                 scan++;
                             }
-                            innerText = (seenDistinct ? "DISTINCT " : "") + string.Join("", innerParts);
+                            // Must match the key format built from SelectItem.AggCol
+                            innerText = (seenDistinct ? "DISTINCT " : "") + SqlTokenizer.ToSql(innerParts);
                         }
                         string exprKey = $"{fname.ToUpperInvariant()}({innerText})";
                         if (ctx.Row.TryGetValue(exprKey, out var precomp))

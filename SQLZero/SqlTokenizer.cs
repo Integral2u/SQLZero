@@ -22,6 +22,22 @@ namespace SQLZero
         "WITH"
     };
 
+        private static readonly System.Text.RegularExpressions.Regex SimpleIdent =
+            new(@"^[A-Za-z_@#][A-Za-z0-9_@#]*$");
+
+        /// <summary>
+        /// Turns tokens back into SQL text that re-tokenizes to the same tokens,
+        /// bracket-quoting identifiers that contain spaces/symbols or clash with keywords.
+        /// </summary>
+        public static string ToSql(IEnumerable<SqlToken> tokens) =>
+            string.Join(" ", tokens.Where(t => t.Type != SqlTokenType.EOF).Select(t => t.Type switch
+            {
+                SqlTokenType.StringLiteral => "'" + t.Value.Replace("'", "''") + "'",
+                SqlTokenType.Identifier when !SimpleIdent.IsMatch(t.Value) || Keywords.Contains(t.Value)
+                    => t.Value.Contains(']') ? "\"" + t.Value + "\"" : "[" + t.Value + "]",
+                _ => t.Value
+            }));
+
         public static List<SqlToken> Tokenize(string? sql)
         {
             sql ??= string.Empty;
