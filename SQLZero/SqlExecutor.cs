@@ -1430,7 +1430,7 @@ namespace SQLZero
                     if (inner.Count > 0 && inner[0].Value.Equals("DISTINCT", StringComparison.OrdinalIgnoreCase))
                     { item.AggDistinct = true; inner = [.. inner.Skip(1)]; }
                     item.AggCol = inner.Count == 0 || inner[0].Value == "*" ? "*"
-                                : string.Join(" ", inner.Select(x => x.Value));
+                                : SqlTokenizer.ToSql(inner);
                     if (toks.Count >= 3 && toks[2].Value == "*") item.AggCol = "*";
                     if (alias == null) item.Alias = $"{fn}({item.AggCol})";
                 }
@@ -1531,7 +1531,7 @@ namespace SQLZero
                     else if (depth == 0 && IsClause(Cur.Value)) break;
                     toks.Add(Consume());
                 }
-                result.Add(string.Join(" ", toks.Select(x => x.Value)));
+                result.Add(SqlTokenizer.ToSql(toks));
                 Match(",");
             }
             return result;

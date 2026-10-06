@@ -2326,5 +2326,56 @@ namespace SQLZeroTests
                 await foreach (var _ in rows.WithCancellation(cts.Token)) { }
             });
         }
+
+        // ──────────────────────────────────────────────────────────────────────────
+        //  Quoted column names containing spaces / symbols
+        // ──────────────────────────────────────────────────────────────────────────
+
+        private static SQLDatabase BuildSupplierDb()
+        {
+            var db = new SQLDatabase();
+            var tbl = new SQLTable("Advice", ["Supplier", "Supplier Name", "Cost Amount(exc)"]);
+            tbl.AddRow(["S1", "Acme", 10.5]);
+            tbl.AddRow(["S1", "Acme", 4.5]);
+            tbl.AddRow(["S2", "Bolt Co", 7.0]);
+            db.AddTable(tbl);
+            return db;
+        }
+
+        [TestCase("\"", "\"")]
+        [TestCase("[", "]")]
+        [TestCase("`", "`")]
+        public void QuotedColumns_SumAndGroupBy_UseColumnValues(string open, string close)
+        {
+            string Q(string name) => open + name + close;
+            var db = BuildSupplierDb();
+            var r = db.ExecuteReader(
+                $"SELECT {Q("Supplier")}, {Q("Supplier Name")}, SUM({Q("Cost Amount(exc)")}) AS {Q("Total Cost")} " +
+                $"FROM Advice GROUP BY {Q("Supplier")}, {Q("Supplier Name")} ORDER BY {Q("Total Cost")} DESC");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(DataRows(r), Is.EqualTo(2));
+                Assert.That(Cell(r, 1, 1), Is.EqualTo("Acme"));
+                Assert.That(SqlExpr.ToNum(Cell(r, 1, 2)), Is.EqualTo(15.0).Within(0.001));
+                Assert.That(Cell(r, 2, 1), Is.EqualTo("Bolt Co"));
+                Assert.That(SqlExpr.ToNum(Cell(r, 2, 2)), Is.EqualTo(7.0).Within(0.001));
+            });
+        }
+
+        [Test]
+        public void QuotedColumns_Having_ResolvesAggregateOnSpacedColumn()
+        {
+            var db = BuildSupplierDb();
+            var r = db.ExecuteReader(
+                "SELECT [Supplier Name], SUM([Cost Amount(exc)]) AS Total FROM Advice " +
+                "GROUP BY [Supplier Name] HAVING SUM([Cost Amount(exc)]) > 10");
+
+            Assert.Multiple(() =>
+            {
+                Assert.That(DataRows(r), Is.EqualTo(1));
+                Assert.That(Cell(r, 1, 0), Is.EqualTo("Acme"));
+            });
+        }
     }
 }
